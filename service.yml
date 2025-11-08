@@ -4,10 +4,33 @@ metadata:
   name: bms-service
   labels:
     app: bms
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  type: LoadBalancer
+  type: ClusterIP  # Change from LoadBalancer to ClusterIP (Ingress will expose it)
   ports:
-  - port: 80
-    targetPort: 3000  # Replace with the port your app runs on
+    - port: 80
+      targetPort: 3000
   selector:
     app: bms
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bms-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: bms.example.com   # replace with your domain or use public LB DNS if no domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bms-service
+            port:
+              number: 80
